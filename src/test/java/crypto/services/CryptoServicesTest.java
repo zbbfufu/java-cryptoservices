@@ -1,12 +1,12 @@
 package crypto.services;
 
-import crypto.key.CachedKeyProvider;
-import crypto.key.CipheredKeyProvider;
-import crypto.key.HardcodedKeyProvider;
+import crypto.key.*;
 import org.junit.Test;
 
-import java.util.Arrays;
+import java.security.Key;
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by julienfurgerot on 16/05/2017.
@@ -14,30 +14,47 @@ import java.util.concurrent.TimeUnit;
 public class CryptoServicesTest {
 
     private static final String KEY_ALGO = "AES";
-    private static final int KEY_SISE = 128;
+    private static final String CIPHER_ALGO = "AES/CBC/PKCS5Padding";
+    private static final int KEY_SIZE = 128;
 
-    private static final byte[] keyBites = new byte[0];
-
-
-    @Test
-    public void testIntToBytes() throws Exception {
-        byte[] val = { (byte)125 >> 0x00001 };
-        System.out.println(Arrays.toString( val ) );
-    }
+    private static final byte[] SOME_DATA = new byte[0];
+    private static final String SOME_TEXT = "Hello World!";
 
     @Test
     public void testCreateJreCryptoService() throws Exception {
 
-        HardcodedKeyProvider keyProvider = new HardcodedKeyProvider( KEY_ALGO, KEY_SISE );
+        HardcodedKeyProvider masterKeyProvider = new HardcodedKeyProvider( KEY_ALGO, KEY_SIZE );
 
-        JreCryptoService masterCS = new JreCryptoService( keyProvider );
+        JreCryptoService masterCS = new JreCryptoService( masterKeyProvider, CIPHER_ALGO );
 
-        CipheredKeyProvider intermediateKP = new CipheredKeyProvider( masterCS, KEY_ALGO, mode -> keyBites );
+        final byte[] interediateKeyCipheredBytes = masterCS.encrypt(
+                new HardcodedKeyProvider( KEY_ALGO, KEY_SIZE ).getKey( Mode.ENCRYPT ).getEncoded()
+        );
+
+        CipheredKeyProvider intermediateKP = new CipheredKeyProvider( masterCS, KEY_ALGO, mode -> interediateKeyCipheredBytes );
 
         CachedKeyProvider intermediateKeyCache = new CachedKeyProvider( intermediateKP, 5, TimeUnit.SECONDS );
 
-        JreCryptoService cs = new JreCryptoService( intermediateKeyCache );
+        CryptoService cs = new JreCryptoService( intermediateKeyCache, CIPHER_ALGO );
 
-        cs.encrypt("Hello World!");
+        assertEquals( SOME_TEXT, cs.decrypt( cs.encrypt( SOME_TEXT ) ) );
+    }
+
+    @Test
+    public void testGeneratedKeyDataCryptoService() throws Exception {
+
+        KeyProvider keyProvider = new HardcodedKeyProvider( KEY_ALGO, KEY_SIZE);
+
+        Key docKey = keyProvider.getKey(Mode.ENCRYPT);
+
+        JreCryptoService cs = new JreCryptoService( mode -> docKey, CIPHER_ALGO );
+
+        byte[] cipheredDoc = cs.encrypt( SOME_DATA );
+
+        // save docKey and cipheredDoc
+
+        // later reload document and key
+
+
     }
 }

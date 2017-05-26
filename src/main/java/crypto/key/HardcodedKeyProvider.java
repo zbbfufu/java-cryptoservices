@@ -21,4 +21,9 @@ public class HardcodedKeyProvider implements KeyProvider {
     public Key getKey( Mode mode ) {
         return key;
     }
+
+    @Override
+    public String getKeyAlgorithm(Mode mode) {
+        return key.getAlgorithm();
+    }
 }

@@ -8,4 +8,6 @@ import java.security.*;
 public interface KeyProvider {
 
     Key getKey( Mode mode ) throws GeneralSecurityException;
+
+    String getKeyAlgorithm( Mode mode );
 }

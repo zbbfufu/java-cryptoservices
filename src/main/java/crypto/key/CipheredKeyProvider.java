@@ -27,4 +27,9 @@ public class CipheredKeyProvider implements KeyProvider {
         byte[] binKey = cryptoService.decrypt( binaryKeySupplier.apply( mode ) );
         return new SecretKeySpec( binKey, keyAlgorithm );
     }
+
+    @Override
+    public String getKeyAlgorithm(Mode mode) {
+        return keyAlgorithm;
+    }
 }

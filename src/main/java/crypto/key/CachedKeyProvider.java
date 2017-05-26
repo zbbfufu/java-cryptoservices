@@ -29,4 +29,9 @@ public class CachedKeyProvider implements KeyProvider {
     public Key getKey( Mode mode ) {
         return keyCache.getUnchecked( mode );
     }
+
+    @Override
+    public String getKeyAlgorithm( Mode mode ) {
+        return keyCache.getUnchecked( mode ).getAlgorithm();
+    }
 }

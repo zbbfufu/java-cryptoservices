@@ -5,6 +5,7 @@ import crypto.key.KeyProvider;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.util.Base64;
 
 import static crypto.key.Mode.DECRYPT;
@@ -43,19 +44,28 @@ public class JreCryptoService implements CryptoService {
     }
 
     public byte[] encrypt(byte[] payload) throws GeneralSecurityException {
+        return encrypt( payload, keyProvider.getKey( ENCRYPT ) ) ;
+    }
+
+    public byte[] encrypt(byte[] payload, Key encryptKey) throws GeneralSecurityException {
         Cipher cipher = localCipher.get();
-        cipher.init( Cipher.ENCRYPT_MODE, keyProvider.getKey( ENCRYPT ) );
+        cipher.init( Cipher.ENCRYPT_MODE, encryptKey );
         return new Record( cipher.getIV(), cipher.doFinal( payload ) ).getBytes();
     }
+
 
     public String decrypt(String ciphered) throws GeneralSecurityException {
         return new String( decrypt( b64Decoder.decode( ciphered ) ) );
     }
 
     public byte[] decrypt(byte[] ciphered) throws GeneralSecurityException {
+        return decrypt( ciphered, keyProvider.getKey( DECRYPT ) );
+    }
+
+    public byte[] decrypt(byte[] ciphered, Key decryptKey) throws GeneralSecurityException {
         Cipher decipher = localCipher.get();
         Record record = new Record( ciphered );
-        decipher.init( Cipher.DECRYPT_MODE, keyProvider.getKey( DECRYPT ), new IvParameterSpec( record.getIv() ) );
+        decipher.init( Cipher.DECRYPT_MODE, decryptKey, new IvParameterSpec( record.getIv() ) );
         return decipher.doFinal( record.getData() );
     }
 }
